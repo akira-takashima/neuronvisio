@@ -260,31 +260,30 @@ class Visio(object):
         voltage = []
         connections = []
         for sec in h.allsec():
-            if sec.name != 'soma':
-                x_sec, y_sec, z_sec, d_sec = self.retrieve_coordinate(sec)
-                self.sec2coords[sec.name()] = [x_sec, y_sec, z_sec]
-                # Store the section. later.
-                radius = sec.diam/2.
-                sec_coords_bound = ((x_sec.min(), x_sec.max()), 
-                                    (y_sec.min() - radius, 
-                                     y_sec.max() + radius), 
-                                    (z_sec.min() - radius, 
-                                     z_sec.max() + radius))
-                self.cyl2sec[sec_coords_bound] = sec 
-                self.sec2cyl[sec] = sec_coords_bound
+            x_sec, y_sec, z_sec, d_sec = self.retrieve_coordinate(sec)
+            self.sec2coords[sec.name()] = [x_sec, y_sec, z_sec]
+            # Store the section. later.
+            radius = sec.diam/2.
+            sec_coords_bound = ((x_sec.min(), x_sec.max()), 
+                                (y_sec.min() - radius, 
+                                 y_sec.max() + radius), 
+                                (z_sec.min() - radius, 
+                                 z_sec.max() + radius))
+            self.cyl2sec[sec_coords_bound] = sec 
+            self.sec2cyl[sec] = sec_coords_bound
+            
+            
+            for i,xi in enumerate(x_sec):
+                x.append(x_sec[i])
+                y.append(y_sec[i])
+                z.append(z_sec[i])
+                d.append(d_sec[i])
+                indx_geom_seg = len(x) -1
                 
-                
-                for i,xi in enumerate(x_sec):
-                    x.append(x_sec[i])
-                    y.append(y_sec[i])
-                    z.append(z_sec[i])
-                    d.append(d_sec[i])
-                    indx_geom_seg = len(x) -1
+                if len(x) > 1 and i > 0:
+                    connections.append([indx_geom_seg, indx_geom_seg-1])
+            
                     
-                    if len(x) > 1 and i > 0:
-                        connections.append([indx_geom_seg, indx_geom_seg-1])
-                
-                      
         self.edges  = connections
         self.x = x
         self.y = y
@@ -303,20 +302,19 @@ class Visio(object):
         
         var_scalar = []
         for sec in h.allsec():
-            if sec.name() != 'soma':
-                var_value = 0
-                if self.manager.refs.has_key('VecRef'):
-                    for vecRef in self.manager.refs['VecRef']:
-                        if vecRef.sec.name() == sec.name():
-                            if vecRef.vecs.has_key(var):
-                                vec = vecRef.vecs[var]
-                                try:
-                                    var_value = vec[time_point]
-                                except IndexError:
-                                    pass # vector exist, but not initialized.
-                sec_scalar = self.build_sec_scalar(sec, var_value)
-                var_scalar.extend(sec_scalar)
-                  
+            var_value = 0
+            if self.manager.refs.has_key('VecRef'):
+                for vecRef in self.manager.refs['VecRef']:
+                    if vecRef.sec.name() == sec.name():
+                        if vecRef.vecs.has_key(var):
+                            vec = vecRef.vecs[var]
+                            try:
+                                var_value = vec[time_point]
+                            except IndexError:
+                                pass # vector exist, but not initialized.
+            sec_scalar = self.build_sec_scalar(sec, var_value)
+            var_scalar.extend(sec_scalar)
+                
                     
                         
         
@@ -361,12 +359,9 @@ class Visio(object):
         # Making room for the voltage
         v = []
         for sec in h.allsec():
-            if sec.name() != 'soma':
-                sec.push()
-                v.extend(np.repeat(0.0, h.n3d()))
-                h.pop_section()
-            else:
-                print sec.name()
+            sec.push()
+            v.extend(np.repeat(0.0, h.n3d()))
+            h.pop_section()
         
         v = np.array(v)
         self.draw_surface(v, 'v')
