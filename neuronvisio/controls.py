@@ -86,6 +86,8 @@ class Controls(object):
         # Connecting
         self.ui.Plot3D.connect(self.ui.Plot3D, 
                                      QtCore.SIGNAL('clicked()'), self.launch_visio)
+        self.ui.Plot3D.connect(self.ui.SaveSnapshot, 
+                                     QtCore.SIGNAL('clicked()'), self.save_snapshot)
         self.ui.plot_vector_btn.connect(self.ui.plot_vector_btn,
                                          QtCore.SIGNAL('clicked()'), self.plot_vector)
         self.ui.init_btn.connect(self.ui.init_btn,
@@ -346,6 +348,10 @@ class Controls(object):
             # just pass
             pass
 
+    def save_snapshot(self):
+        from mayavi import mlab
+        mlab.savefig(os.path.join(os.environ['HOME'], 'neuronvisio_figure.png'), magnification=100)
+
     def load(self, path_to_file=None):
         """
         General loading method for any kind of format.
@@ -540,6 +546,7 @@ class Controls(object):
     
         time_point_indx = self.ui.timelineSlider.value()
         self.sync_visio_3d(time_point_indx)    
+        mlab.savefig('/Users/akira-takashima/purkinje_figure.png', size=(1000,1000))
         
     def plot_vector(self):
         

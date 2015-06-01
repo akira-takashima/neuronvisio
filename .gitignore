@@ -6,6 +6,9 @@
 .pydevproject
 *.egg-info
 
+# Mac Folder
+.DS_store
+
 # Bkp
 *~
 *i686
@@ -25,3 +28,4 @@ src/Models
 Models
 
 /build
+/neuronvisio/history.py

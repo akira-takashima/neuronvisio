@@ -260,30 +260,31 @@ class Visio(object):
         voltage = []
         connections = []
         for sec in h.allsec():
-            x_sec, y_sec, z_sec, d_sec = self.retrieve_coordinate(sec)
-            self.sec2coords[sec.name()] = [x_sec, y_sec, z_sec]
-            # Store the section. later.
-            radius = sec.diam/2.
-            sec_coords_bound = ((x_sec.min(), x_sec.max()), 
-                                (y_sec.min() - radius, 
-                                 y_sec.max() + radius), 
-                                (z_sec.min() - radius, 
-                                 z_sec.max() + radius))
-            self.cyl2sec[sec_coords_bound] = sec 
-            self.sec2cyl[sec] = sec_coords_bound
-            
-            
-            for i,xi in enumerate(x_sec):
-                x.append(x_sec[i])
-                y.append(y_sec[i])
-                z.append(z_sec[i])
-                d.append(d_sec[i])
-                indx_geom_seg = len(x) -1
+            if sec.name != 'soma':
+                x_sec, y_sec, z_sec, d_sec = self.retrieve_coordinate(sec)
+                self.sec2coords[sec.name()] = [x_sec, y_sec, z_sec]
+                # Store the section. later.
+                radius = sec.diam/2.
+                sec_coords_bound = ((x_sec.min(), x_sec.max()), 
+                                    (y_sec.min() - radius, 
+                                     y_sec.max() + radius), 
+                                    (z_sec.min() - radius, 
+                                     z_sec.max() + radius))
+                self.cyl2sec[sec_coords_bound] = sec 
+                self.sec2cyl[sec] = sec_coords_bound
                 
-                if len(x) > 1 and i > 0:
-                    connections.append([indx_geom_seg, indx_geom_seg-1])
-            
+                
+                for i,xi in enumerate(x_sec):
+                    x.append(x_sec[i])
+                    y.append(y_sec[i])
+                    z.append(z_sec[i])
+                    d.append(d_sec[i])
+                    indx_geom_seg = len(x) -1
                     
+                    if len(x) > 1 and i > 0:
+                        connections.append([indx_geom_seg, indx_geom_seg-1])
+                
+                      
         self.edges  = connections
         self.x = x
         self.y = y
@@ -302,19 +303,20 @@ class Visio(object):
         
         var_scalar = []
         for sec in h.allsec():
-            var_value = 0
-            if self.manager.refs.has_key('VecRef'):
-                for vecRef in self.manager.refs['VecRef']:
-                    if vecRef.sec.name() == sec.name():
-                        if vecRef.vecs.has_key(var):
-                            vec = vecRef.vecs[var]
-                            try:
-                                var_value = vec[time_point]
-                            except IndexError:
-                                pass # vector exist, but not initialized.
-            sec_scalar = self.build_sec_scalar(sec, var_value)
-            var_scalar.extend(sec_scalar)
-                
+            if sec.name() != 'soma':
+                var_value = 0
+                if self.manager.refs.has_key('VecRef'):
+                    for vecRef in self.manager.refs['VecRef']:
+                        if vecRef.sec.name() == sec.name():
+                            if vecRef.vecs.has_key(var):
+                                vec = vecRef.vecs[var]
+                                try:
+                                    var_value = vec[time_point]
+                                except IndexError:
+                                    pass # vector exist, but not initialized.
+                sec_scalar = self.build_sec_scalar(sec, var_value)
+                var_scalar.extend(sec_scalar)
+                  
                     
                         
         
@@ -348,7 +350,7 @@ class Visio(object):
         # The tube
         src = mlab.pipeline.set_active_attribute(points, point_scalars='diameter')
         stripper = mlab.pipeline.stripper(src)
-        tube = mlab.pipeline.tube(stripper, tube_sides = 6, tube_radius = 1)
+        tube = mlab.pipeline.tube(stripper, tube_sides = 20, tube_radius = 1)
         tube.filter.capping = True
 #        tube.filter.use_default_normal = False
         tube.filter.vary_radius = 'vary_radius_by_absolute_scalar'
@@ -359,17 +361,19 @@ class Visio(object):
         # Making room for the voltage
         v = []
         for sec in h.allsec():
-            sec.push()
-            if sec.name != 'soma':
+            if sec.name() != 'soma':
+                sec.push()
                 v.extend(np.repeat(0.0, h.n3d()))
-            h.pop_section()
+                h.pop_section()
+            else:
+                print sec.name()
         
         v = np.array(v)
         self.draw_surface(v, 'v')
 
         # Create a sphere
-        r = 30
-        centre = [0.0, -14.9, 0.0]
+        r = 15.5
+        centre = [0.0, -12.5, 0.0]
         phi, theta = np.mgrid[0:np.pi:101j, 0:2 * np.pi:101j]
         x = r * np.sin(phi) * np.cos(theta) + centre[0]
         y = r * np.sin(phi) * np.sin(theta) + centre[1]
