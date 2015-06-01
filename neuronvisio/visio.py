@@ -360,11 +360,21 @@ class Visio(object):
         v = []
         for sec in h.allsec():
             sec.push()
-            v.extend(np.repeat(0.0, h.n3d()))
+            if sec.name != 'soma':
+                v.extend(np.repeat(0.0, h.n3d()))
             h.pop_section()
         
         v = np.array(v)
         self.draw_surface(v, 'v')
+
+        # Create a sphere
+        r = 30
+        centre = [0.0, -14.9, 0.0]
+        phi, theta = np.mgrid[0:np.pi:101j, 0:2 * np.pi:101j]
+        x = r * np.sin(phi) * np.cos(theta) + centre[0]
+        y = r * np.sin(phi) * np.sin(theta) + centre[1]
+        z = r * np.cos(phi) + centre[2]
+        mlab.mesh(x, y, z, scalars=np.zeros(x.shape), colormap='blue-red')
         
         # ReEnable the rendering
         self.mayavi.visualization.scene.disable_render = False
